@@ -1,4 +1,4 @@
-<div class="apidocDiv">
+<html><head></head><body><div class="apidocDiv">
 <style>
 /*csslint
 */
@@ -47,17 +47,10 @@
 }
 </style>
 <h1>api documentation for
-    <a
-
-        href="https://github.com/schickling/gulp-webserver"
-
-    >gulp-webserver (v0.9.1)</a>
+    <a href="https://github.com/schickling/gulp-webserver">gulp-webserver (v0.9.1)</a>
 </h1>
 <h4>Gulp plugin to run a local webserver with LiveReload</h4>
-<div class="apidocSectionDiv"><a
-    href="#apidoc.tableOfContents"
-    id="apidoc.tableOfContents"
-><h1>table of contents</h1></a><ol>
+<div class="apidocSectionDiv"><a href="#apidoc.tableOfContents" id="apidoc.tableOfContents"><h1>table of contents</h1></a><ol>
 
     <li class="apidocModuleLi"><a href="#apidoc.module.gulp-webserver">module gulp-webserver</a><ol>
 
@@ -104,9 +97,9 @@
      *
      **/
 </span>
-    host: &#x27;localhost&#x27;,
+    host: 'localhost',
     port: 8000,
-    path: &#x27;/&#x27;,
+    path: '/',
     fallback: false,
     https: false,
     open: false,
@@ -116,7 +109,7 @@
      * MIDDLEWARE DEFAULTS
      *
      * NOTE:
-     *  All middleware should defaults should have the &#x27;enable&#x27;
+     *  All middleware should defaults should have the 'enable'
      *  property if you want to support shorthand syntax like:
      *
      *    webserver({
@@ -141,7 +134,7 @@
     //  https://github.com/expressjs/serve-index
     directoryListing: {
       enable: false,
-      path: &#x27;./&#x27;,
+      path: './',
       options: undefined
     },
 
@@ -155,26 +148,26 @@
   // Deep extend user provided options over the all of the defaults
   // Allow shorthand syntax, using the enable property as a flag
   var config = enableMiddlewareShorthand(defaults, options, [
-    &#x27;directoryListing&#x27;,
-    &#x27;livereload&#x27;
+    'directoryListing',
+    'livereload'
   ]);
 
-  if (typeof config.open === &#x27;string&#x27; &#x26;&#x26; config.open.length &#x3e; 0 &#x26;&#x26; config.open.indexOf(&#x27;http&#x27;) !== 0) {
+  if (typeof config.open === 'string' &amp;&amp; config.open.length &gt; 0 &amp;&amp; config.open.indexOf('http') !== 0) {
     // ensure leading slash if this is NOT a complete url form
-    config.open = (config.open.indexOf(&#x27;/&#x27;) !== 0 ? &#x27;/&#x27; : &#x27;&#x27;) + config.open;
+    config.open = (config.open.indexOf('/') !== 0 ? '/' : '') + config.open;
   }
 
   var app = connect();
 
   var openInBrowser = function() {
     if (config.open === false) return;
-    if (typeof config.open === &#x27;string&#x27; &#x26;&#x26; config.open.indexOf(&#x27;http&#x27;) === 0) {
+    if (typeof config.open === 'string' &amp;&amp; config.open.indexOf('http') === 0) {
       // if this is a complete url form
       open(config.open);
       return;
     }
-    open(&#x27;http&#x27; + (config.https ? &#x27;s&#x27; : &#x27;&#x27;) + &#x27;://&#x27; + config.host + &#x27;:&#x27; + config.port + (typeof config.open === &#x27;string&#x27; ? config
-.open : &#x27;&#x27;));
+    open('http' + (config.https ? 's' : '') + '://' + config.host + ':' + config.port + (typeof config.open === 'string' ? config
+.open : ''));
   };
 
   var lrServer;
@@ -194,8 +187,8 @@
       }
       else {
         lrServer = tinyLr({
-          key: fs.readFileSync(config.https.key || __dirname + &#x27;/../ssl/dev-key.pem&#x27;),
-          cert: fs.readFileSync(config.https.cert || __dirname + &#x27;/../ssl/dev-cert.pem&#x27;)
+          key: fs.readFileSync(config.https.key || __dirname + '/../ssl/dev-key.pem'),
+          cert: fs.readFileSync(config.https.cert || __dirname + '/../ssl/dev-cert.pem')
         });
       }
     } else {
@@ -207,20 +200,20 @@
   }
 
   // middlewares
-  if (typeof config.middleware === &#x27;function&#x27;) {
+  if (typeof config.middleware === 'function') {
     app.use(config.middleware);
   } else if (isarray(config.middleware)) {
     config.middleware
-      .filter(function(m) { return typeof m === &#x27;function&#x27;; })
+      .filter(function(m) { return typeof m === 'function'; })
       .forEach(function(m) {
         app.use(m);
       });
   }
 
   // Proxy requests
-  for (var i = 0, len = config.proxies.length; i &#x3c; len; i++) {
+  for (var i = 0, len = config.proxies.length; i &lt; len; i++) {
     var proxyoptions = url.parse(config.proxies[i].target);
-    if (config.proxies[i].hasOwnProperty(&#x27;options&#x27;)) {
+    if (config.proxies[i].hasOwnProperty('options')) {
       extend(proxyoptions, config.proxies[i].options);
     }
     app.use(config.proxies[i].source, proxy(proxyoptions));
@@ -256,8 +249,8 @@
     this.push(file);
     callback();
   })
-  .on(&#x27;data&#x27;, function(f){files.push(f);})
-  .on(&#x27;end&#x27;, function(){
+  .on('data', function(f){files.push(f);})
+  .on('end', function(){
     if (config.fallback) {
       files.forEach(function(file){
         var fallba ...</pre></li>
@@ -288,3 +281,4 @@
     ]
 </div>
 </div>
+</body></html>

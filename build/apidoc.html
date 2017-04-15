@@ -61,12 +61,224 @@
 
     <li class="apidocModuleLi"><a href="#apidoc.module.gulp-webserver">module gulp-webserver</a><ol>
 
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.gulp-webserver.gulp-webserver">
+            function <span class="apidocSignatureSpan"></span>gulp-webserver
+            <span class="apidocSignatureSpan">(options)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.gulp-webserver.toString">
+            function <span class="apidocSignatureSpan">gulp-webserver.</span>toString
+            <span class="apidocSignatureSpan">()</span>
+            </a>
+
+        </li>
+
     </ol></li>
 
 </ol></div>
 
 <div class="apidocSectionDiv">
 <h1><a href="#apidoc.module.gulp-webserver" id="apidoc.module.gulp-webserver">module gulp-webserver</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.gulp-webserver.gulp-webserver" id="apidoc.element.gulp-webserver.gulp-webserver">
+        function <span class="apidocSignatureSpan"></span>gulp-webserver
+        <span class="apidocSignatureSpan">(options)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">gulp-webserver = function (options) {
+
+  var defaults = {
+
+<span class="apidocCodeCommentSpan">    /**
+     *
+     * BASIC DEFAULTS
+     *
+     **/
+</span>
+    host: &#x27;localhost&#x27;,
+    port: 8000,
+    path: &#x27;/&#x27;,
+    fallback: false,
+    https: false,
+    open: false,
+
+    /**
+     *
+     * MIDDLEWARE DEFAULTS
+     *
+     * NOTE:
+     *  All middleware should defaults should have the &#x27;enable&#x27;
+     *  property if you want to support shorthand syntax like:
+     *
+     *    webserver({
+     *      livereload: true
+     *    });
+     *
+     */
+
+    // Middleware: Livereload
+    livereload: {
+      enable: false,
+      port: 35729,
+      filter: function (filename) {
+        if (filename.match(/node_modules/)) {
+          return false;
+        } else { return true; }
+      }
+    },
+
+    // Middleware: Directory listing
+    // For possible options, see:
+    //  https://github.com/expressjs/serve-index
+    directoryListing: {
+      enable: false,
+      path: &#x27;./&#x27;,
+      options: undefined
+    },
+
+    // Middleware: Proxy
+    // For possible options, see:
+    //  https://github.com/andrewrk/connect-proxy
+    proxies: []
+
+  };
+
+  // Deep extend user provided options over the all of the defaults
+  // Allow shorthand syntax, using the enable property as a flag
+  var config = enableMiddlewareShorthand(defaults, options, [
+    &#x27;directoryListing&#x27;,
+    &#x27;livereload&#x27;
+  ]);
+
+  if (typeof config.open === &#x27;string&#x27; &#x26;&#x26; config.open.length &#x3e; 0 &#x26;&#x26; config.open.indexOf(&#x27;http&#x27;) !== 0) {
+    // ensure leading slash if this is NOT a complete url form
+    config.open = (config.open.indexOf(&#x27;/&#x27;) !== 0 ? &#x27;/&#x27; : &#x27;&#x27;) + config.open;
+  }
+
+  var app = connect();
+
+  var openInBrowser = function() {
+    if (config.open === false) return;
+    if (typeof config.open === &#x27;string&#x27; &#x26;&#x26; config.open.indexOf(&#x27;http&#x27;) === 0) {
+      // if this is a complete url form
+      open(config.open);
+      return;
+    }
+    open(&#x27;http&#x27; + (config.https ? &#x27;s&#x27; : &#x27;&#x27;) + &#x27;://&#x27; + config.host + &#x27;:&#x27; + config.port + (typeof config.open === &#x27;string&#x27; ? config
+.open : &#x27;&#x27;));
+  };
+
+  var lrServer;
+
+  if (config.livereload.enable) {
+
+    app.use(connectLivereload({
+      port: config.livereload.port
+    }));
+
+    if (config.https) {
+      if (config.https.pfx) {
+        lrServer = tinyLr({
+          pfx: fs.readFileSync(config.https.pfx),
+          passphrase: config.https.passphrase
+        });
+      }
+      else {
+        lrServer = tinyLr({
+          key: fs.readFileSync(config.https.key || __dirname + &#x27;/../ssl/dev-key.pem&#x27;),
+          cert: fs.readFileSync(config.https.cert || __dirname + &#x27;/../ssl/dev-cert.pem&#x27;)
+        });
+      }
+    } else {
+      lrServer = tinyLr();
+    }
+
+    lrServer.listen(config.livereload.port, config.host);
+
+  }
+
+  // middlewares
+  if (typeof config.middleware === &#x27;function&#x27;) {
+    app.use(config.middleware);
+  } else if (isarray(config.middleware)) {
+    config.middleware
+      .filter(function(m) { return typeof m === &#x27;function&#x27;; })
+      .forEach(function(m) {
+        app.use(m);
+      });
+  }
+
+  // Proxy requests
+  for (var i = 0, len = config.proxies.length; i &#x3c; len; i++) {
+    var proxyoptions = url.parse(config.proxies[i].target);
+    if (config.proxies[i].hasOwnProperty(&#x27;options&#x27;)) {
+      extend(proxyoptions, config.proxies[i].options);
+    }
+    app.use(config.proxies[i].source, proxy(proxyoptions));
+  }
+
+  if (config.directoryListing.enable) {
+    app.use(config.path, serveIndex(path.resolve(config.directoryListing.path), config.directoryListing.options));
+  }
+
+
+  var files = [];
+
+  // Create server
+  var stream = through.obj(function(file, enc, callback) {
+
+    app.use(config.path, serveStatic(file.path));
+
+    if (config.livereload.enable) {
+      var watchOptions = {
+        ignoreDotFiles: true,
+        filter: config.livereload.filter
+      };
+      watch.watchTree(file.path, watchOptions, function (filename) {
+        lrServer.changed({
+          body: {
+            files: filename
+          }
+        });
+
+      });
+    }
+
+    this.push(file);
+    callback();
+  })
+  .on(&#x27;data&#x27;, function(f){files.push(f);})
+  .on(&#x27;end&#x27;, function(){
+    if (config.fallback) {
+      files.forEach(function(file){
+        var fallba ...</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.gulp-webserver.toString" id="apidoc.element.gulp-webserver.toString">
+        function <span class="apidocSignatureSpan">gulp-webserver.</span>toString
+        <span class="apidocSignatureSpan">()</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">toString = function () {
+    return toString;
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
 
 </div>
 
